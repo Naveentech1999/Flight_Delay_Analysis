@@ -44,10 +44,11 @@ def main() -> None:
         ]
     )
     prediction = int(model.predict(flight)[0])
-    probability = float(model.predict_proba(flight)[0][1])
 
-    print(f"Prediction: {'Delayed' if prediction else 'On time'}")
-    print(f"Delay probability: {probability:.2f}")
+    if prediction:
+        print("⚠️ Your flight is delayed.")
+    else:
+        print("✅ Your flight is on time.")
 
 
 if __name__ == "__main__":
