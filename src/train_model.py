@@ -23,8 +23,6 @@ FEATURE_COLUMNS = [
     "day_of_week",
     "month",
     "distance",
-    "carrier_delay",
-    "weather_delay",
 ]
 TARGET_COLUMN = "delayed"
 CATEGORICAL_COLUMNS = ["airline", "origin", "destination"]

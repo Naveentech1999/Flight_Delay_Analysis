@@ -9,7 +9,7 @@ This project demonstrates an end-to-end Python machine learning workflow for ana
 - Trains a Random Forest classifier to predict whether a flight will be delayed by 15 minutes or more.
 - Prints accuracy, precision, recall, F1 score, and ROC-AUC metrics.
 - Saves the trained model pipeline to disk.
-- Provides a local command-line script for predicting delay risk for a single flight.
+- Provides a local command-line script for predicting delay risk from pre-flight details only.
 
 ## Project structure
 
@@ -112,11 +112,10 @@ The exact values can vary when you use a larger or different dataset.
 After training, run this one-line command first. It is the safest option to copy and paste into any terminal:
 
 ```bash
-python src/predict.py --model models/flight_delay_model.joblib --airline AA --origin JFK --destination LAX --scheduled-departure-hour 18 --day-of-week 5 --month 7 --distance 2475 --carrier-delay 10 --weather-delay 5
+python src/predict.py --model models/flight_delay_model.joblib --airline AA --origin JFK --destination LAX --scheduled-departure-hour 18 --day-of-week 5 --month 7 --distance 2475
 ```
 
 If you prefer a multi-line command in macOS/Linux Bash, each `\` must be the very last character on that line. Do not add spaces after it:
-After training, run:
 
 ```bash
 python src/predict.py \
@@ -127,9 +126,7 @@ python src/predict.py \
   --scheduled-departure-hour 18 \
   --day-of-week 5 \
   --month 7 \
-  --distance 2475 \
-  --carrier-delay 10 \
-  --weather-delay 5
+  --distance 2475
 ```
 
 For Windows PowerShell, use backticks instead of backslashes:
@@ -143,9 +140,7 @@ python src/predict.py `
   --scheduled-departure-hour 18 `
   --day-of-week 5 `
   --month 7 `
-  --distance 2475 `
-  --carrier-delay 10 `
-  --weather-delay 5
+  --distance 2475
 ```
 
 If you see `bash: --model: command not found`, your shell treated each option as a separate command. Use the one-line command above, or make sure each Bash line-continuation `\` has no trailing spaces.
@@ -156,6 +151,8 @@ Example output:
 Prediction: Delayed
 Delay probability: 0.67
 ```
+
+Note: prediction no longer asks for `carrier_delay` or `weather_delay`. Those values usually tell you delay after it has already happened, so using them as prediction inputs is data leakage. The model now predicts from details you can know before the flight: airline, route, departure hour, day, month, and distance.
 
 
 ### Train with Indian sample airline data
@@ -169,30 +166,30 @@ python src/train_model.py --data data/indian_sample_flights.csv --model-output m
 Then predict an Indian domestic flight with the trained Indian sample model:
 
 ```bash
-python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708 --carrier-delay 0 --weather-delay 25
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708
 ```
 
 In this sample, airline codes include `6E` for IndiGo, `AI` for Air India, `UK` for Vistara, `SG` for SpiceJet, and `QP` for Akasa Air. Airport codes include `DEL`, `BOM`, `BLR`, `HYD`, `MAA`, `CCU`, `GOI`, `AMD`, `IXB`, and `SXR`. The `delayed` column is still the output label: `1` means delayed and `0` means not delayed. This sample file is for learning and local testing, not official airline performance reporting.
 
 Important: the `delayed` column is required only when you train the model because it is the answer the model learns. When you run `src/predict.py`, you do not pass `delayed`; the model creates that output for you as `Prediction: Delayed` or `Prediction: On time`.
 
-If every prediction is showing `Delayed`, try an on-time style example with no known carrier or weather delay:
+If every prediction is showing `Delayed`, try an on-time style route/time example:
 
 ```bash
-python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080 --carrier-delay 0 --weather-delay 0
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080
 ```
 
-Try a delayed style example with weather delay:
+Try another route/time example that may have higher delay risk:
 
 ```bash
-python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708 --carrier-delay 0 --weather-delay 25
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708
 ```
 
-To get a `Prediction: On time` result, first retrain the Indian model and then use a flight with no known carrier or weather delay:
+To get a `Prediction: On time` result, first retrain the Indian model and then test a lower-risk route/time example:
 
 ```bash
 python src/train_model.py --data data/indian_sample_flights.csv --model-output models/indian_flight_delay_model.joblib
-python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080 --carrier-delay 0 --weather-delay 0
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080
 ```
 
 Expected prediction style:
@@ -202,15 +199,13 @@ Prediction: On time
 Delay probability: 0.20
 ```
 
-The exact probability can change, but the prediction should be lower risk than the weather-delay example.
-
-If you keep testing the delayed example with `--weather-delay 25`, the model should usually return `Prediction: Delayed` because you are telling it that there is already a weather delay. Use `--carrier-delay 0 --weather-delay 0` when you want to test a not-delayed style case.
+The exact probability can change, but this should be a lower-risk example than routes/times that the sample data often marks delayed.
 
 With this small learning dataset, predictions can be biased because there are only 25 rows. For better results, train with more real rows that include both `delayed = 0` and `delayed = 1`.
 
 ## Using your own dataset
 
-Your CSV file should include these columns:
+Your training CSV file should include these columns. Only `delayed` is the answer column; the other columns are pre-flight inputs:
 
 | Column | Type | Description |
 | --- | --- | --- |
@@ -221,8 +216,6 @@ Your CSV file should include these columns:
 | `day_of_week` | Number | Day of week from 1 to 7 |
 | `month` | Number | Month from 1 to 12 |
 | `distance` | Number | Flight distance in miles |
-| `carrier_delay` | Number | Carrier delay minutes known before/at analysis time |
-| `weather_delay` | Number | Weather delay minutes known before/at analysis time |
 | `delayed` | Number | Target label: `1` if delayed by 15+ minutes, otherwise `0` |
 
 Train with your own data:

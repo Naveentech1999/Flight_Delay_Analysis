@@ -20,8 +20,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--day-of-week", type=int, required=True, help="Day of week from 1 to 7.")
     parser.add_argument("--month", type=int, required=True, help="Month from 1 to 12.")
     parser.add_argument("--distance", type=float, required=True, help="Flight distance in miles.")
-    parser.add_argument("--carrier-delay", type=float, default=0.0, help="Carrier delay minutes.")
-    parser.add_argument("--weather-delay", type=float, default=0.0, help="Weather delay minutes.")
     return parser.parse_args()
 
 
@@ -42,8 +40,6 @@ def main() -> None:
                 "day_of_week": args.day_of_week,
                 "month": args.month,
                 "distance": args.distance,
-                "carrier_delay": args.carrier_delay,
-                "weather_delay": args.weather_delay,
             }
         ]
     )
