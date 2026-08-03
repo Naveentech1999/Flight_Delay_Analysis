@@ -116,6 +116,7 @@ python src/predict.py --model models/flight_delay_model.joblib --airline AA --or
 ```
 
 If you prefer a multi-line command in macOS/Linux Bash, each `\` must be the very last character on that line. Do not add spaces after it:
+After training, run:
 
 ```bash
 python src/predict.py \
