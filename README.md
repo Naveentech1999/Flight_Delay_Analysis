@@ -174,6 +174,40 @@ python src/predict.py --model models/indian_flight_delay_model.joblib --airline 
 
 In this sample, airline codes include `6E` for IndiGo, `AI` for Air India, `UK` for Vistara, `SG` for SpiceJet, and `QP` for Akasa Air. Airport codes include `DEL`, `BOM`, `BLR`, `HYD`, `MAA`, `CCU`, `GOI`, `AMD`, `IXB`, and `SXR`. The `delayed` column is still the output label: `1` means delayed and `0` means not delayed. This sample file is for learning and local testing, not official airline performance reporting.
 
+Important: the `delayed` column is required only when you train the model because it is the answer the model learns. When you run `src/predict.py`, you do not pass `delayed`; the model creates that output for you as `Prediction: Delayed` or `Prediction: On time`.
+
+If every prediction is showing `Delayed`, try an on-time style example with no known carrier or weather delay:
+
+```bash
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080 --carrier-delay 0 --weather-delay 0
+```
+
+Try a delayed style example with weather delay:
+
+```bash
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708 --carrier-delay 0 --weather-delay 25
+```
+
+To get a `Prediction: On time` result, first retrain the Indian model and then use a flight with no known carrier or weather delay:
+
+```bash
+python src/train_model.py --data data/indian_sample_flights.csv --model-output models/indian_flight_delay_model.joblib
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline UK --origin BLR --destination DEL --scheduled-departure-hour 6 --day-of-week 2 --month 3 --distance 1080 --carrier-delay 0 --weather-delay 0
+```
+
+Expected prediction style:
+
+```text
+Prediction: On time
+Delay probability: 0.20
+```
+
+The exact probability can change, but the prediction should be lower risk than the weather-delay example.
+
+If you keep testing the delayed example with `--weather-delay 25`, the model should usually return `Prediction: Delayed` because you are telling it that there is already a weather delay. Use `--carrier-delay 0 --weather-delay 0` when you want to test a not-delayed style case.
+
+With this small learning dataset, predictions can be biased because there are only 25 rows. For better results, train with more real rows that include both `delayed = 0` and `delayed = 1`.
+
 ## Using your own dataset
 
 Your CSV file should include these columns:
