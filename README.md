@@ -109,6 +109,13 @@ The exact values can vary when you use a larger or different dataset.
 
 ### Predict delay risk for one flight
 
+After training, run this one-line command first. It is the safest option to copy and paste into any terminal:
+
+```bash
+python src/predict.py --model models/flight_delay_model.joblib --airline AA --origin JFK --destination LAX --scheduled-departure-hour 18 --day-of-week 5 --month 7 --distance 2475 --carrier-delay 10 --weather-delay 5
+```
+
+If you prefer a multi-line command in macOS/Linux Bash, each `\` must be the very last character on that line. Do not add spaces after it:
 After training, run:
 
 ```bash
@@ -125,12 +132,47 @@ python src/predict.py \
   --weather-delay 5
 ```
 
+For Windows PowerShell, use backticks instead of backslashes:
+
+```powershell
+python src/predict.py `
+  --model models/flight_delay_model.joblib `
+  --airline AA `
+  --origin JFK `
+  --destination LAX `
+  --scheduled-departure-hour 18 `
+  --day-of-week 5 `
+  --month 7 `
+  --distance 2475 `
+  --carrier-delay 10 `
+  --weather-delay 5
+```
+
+If you see `bash: --model: command not found`, your shell treated each option as a separate command. Use the one-line command above, or make sure each Bash line-continuation `\` has no trailing spaces.
+
 Example output:
 
 ```text
 Prediction: Delayed
 Delay probability: 0.67
 ```
+
+
+### Train with Indian sample airline data
+
+This repository also includes a small Indian domestic flight sample dataset for practice:
+
+```bash
+python src/train_model.py --data data/indian_sample_flights.csv --model-output models/indian_flight_delay_model.joblib
+```
+
+Then predict an Indian domestic flight with the trained Indian sample model:
+
+```bash
+python src/predict.py --model models/indian_flight_delay_model.joblib --airline 6E --origin DEL --destination BOM --scheduled-departure-hour 8 --day-of-week 1 --month 1 --distance 708 --carrier-delay 0 --weather-delay 25
+```
+
+In this sample, airline codes include `6E` for IndiGo, `AI` for Air India, `UK` for Vistara, `SG` for SpiceJet, and `QP` for Akasa Air. Airport codes include `DEL`, `BOM`, `BLR`, `HYD`, `MAA`, `CCU`, `GOI`, `AMD`, `IXB`, and `SXR`. The `delayed` column is still the output label: `1` means delayed and `0` means not delayed. This sample file is for learning and local testing, not official airline performance reporting.
 
 ## Using your own dataset
 
